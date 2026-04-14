@@ -1,0 +1,78 @@
+extends CharacterBody3D
+
+const SPEED = 10.0
+
+var _time_label: Label
+
+func _ready() -> void:
+	_build_mesh()
+	_build_collision()
+	_build_camera()
+	_setup_input_map()
+	_build_hud()
+
+func _build_mesh() -> void:
+	var mesh_instance := MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.5
+	sphere.height = 1.0
+	mesh_instance.mesh = sphere
+	add_child(mesh_instance)
+
+func _build_collision() -> void:
+	var col := CollisionShape3D.new()
+	var shape := SphereShape3D.new()
+	shape.radius = 0.5
+	col.shape = shape
+	add_child(col)
+
+func _build_camera() -> void:
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 15, 0)
+	add_child(cam)
+	cam.look_at(global_position, Vector3.FORWARD)
+
+func _setup_input_map() -> void:
+	_add_action("move_up",    KEY_W,  JOY_AXIS_LEFT_Y, -1)
+	_add_action("move_down",  KEY_S,  JOY_AXIS_LEFT_Y,  1)
+	_add_action("move_left",  KEY_A,  JOY_AXIS_LEFT_X, -1)
+	_add_action("move_right", KEY_D,  JOY_AXIS_LEFT_X,  1)
+
+func _add_action(action: String, key: Key, axis: JoyAxis, axis_value: float) -> void:
+	if not InputMap.has_action(action):
+		InputMap.add_action(action)
+
+	var key_event := InputEventKey.new()
+	key_event.keycode = key
+	InputMap.action_add_event(action, key_event)
+
+	var axis_event := InputEventJoypadMotion.new()
+	axis_event.axis = axis
+	axis_event.axis_value = axis_value
+	InputMap.action_add_event(action, axis_event)
+
+func _build_hud() -> void:
+	var canvas := CanvasLayer.new()
+	add_child(canvas)
+
+	_time_label = Label.new()
+	_time_label.position = Vector2(10, -10)
+	_time_label.anchor_bottom = 1.0
+	_time_label.anchor_top = 1.0
+	_time_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	canvas.add_child(_time_label)
+
+func _process(_delta: float) -> void:
+	_time_label.text = "%.2f" % (Time.get_ticks_msec() / 1000.0)
+
+func _physics_process(_delta: float) -> void:
+	var input_dir := Vector2(
+		Input.get_axis("move_left", "move_right"),
+		Input.get_axis("move_up", "move_down")
+	)
+
+	if input_dir.length() > 1.0:
+		input_dir = input_dir.normalized()
+
+	position.x += input_dir.x * SPEED * _delta
+	position.z += input_dir.y * SPEED * _delta
