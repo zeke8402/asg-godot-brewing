@@ -13,30 +13,8 @@ func _ready() -> void:
 	_build_anchor()
 
 func _build_anchor() -> void:
-	_anchor = preload("res://Player/anchor.gd").new()
+	_anchor = preload("res://Player/player.gd").new()
 	_anchor.name = "Anchor"
-
-	var col := CollisionShape3D.new()
-	var shape := SphereShape3D.new()
-	shape.radius = 0.5
-	col.shape = shape
-	_anchor.add_child(col)
-
-	var mesh_instance := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.5
-	sphere.height = 1.0
-	mesh_instance.mesh = sphere
-
-	var mat := StandardMaterial3D.new()
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(1, 1, 1, 0.0)
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.grow = true
-	mat.grow_amount = 0.02
-	mesh_instance.material_override = mat
-
-	_anchor.add_child(mesh_instance)
 	add_child(_anchor)
 
 func _build_camera() -> void:

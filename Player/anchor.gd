@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const SPEED = 10.0
+const SPEED = 25.0
 const CELL_COUNT = 100
 const FLOCK_RADIUS = 2.0
 
@@ -31,18 +31,6 @@ func _spawn_cells() -> void:
 			global_position.y,
 			global_position.z + sin(angle) * FLOCK_RADIUS
 		)
-
-func add_cell() -> void:
-	var cell: Node3D = preload("res://Player/cell.gd").new()
-	cell.anchor = self
-	get_parent().add_child(cell)
-	cells.append(cell)
-
-func remove_cell(index: int) -> void:
-	if index < 0 or index >= cells.size():
-		return
-	cells[index].queue_free()
-	cells.remove_at(index)
 
 func _physics_process(delta: float) -> void:
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
