@@ -2,10 +2,12 @@ extends Node3D
 
 var velocity := Vector3.ZERO
 var acceleration := Vector3.ZERO
+var time_out_of_borders: float = 0.0
 
 @export var maxVelocity: float = 5.0
 @export var maxAcceleration: float = 10.0
 @export var rotationOffset: float = PI/2
+
 
 var neighbors := []
 var neighborsDistances := []

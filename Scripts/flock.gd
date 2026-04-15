@@ -3,7 +3,7 @@ extends Node3D
 const SPEED = 25
 const CELL_COUNT = 100
 const FLOCK_RADIUS = 2.0
-const RADIUS_STRENGTH = 8.0
+const RADIUS_STRENGTH = 100.0
 const SEPARATION_RADIUS = 1.2
 const SEPARATION_STRENGTH = 6.0
 const DAMPING = 0.85
@@ -15,7 +15,7 @@ const AVOIDANCE_FACTOR = 1000
 var _cells: Array[Node3D] = []
 
 # Rule weights
-@export var cellMaxVelocity: float = 1.0
+@export var cellMaxVelocity: float = 10
 @export var cohesionWeight: float = 0.3
 @export var separationWeight: float = 50
 @export var alignmentWeight: float = 1
@@ -102,7 +102,6 @@ func _process(delta: float) -> void:
 	else:
 		_process_flock_idle(delta)
 
-
 func _process_flock(delta: float) -> void:
 	for cell in _cells:
 		var to_cell: Vector3 = cell.global_position - global_position
@@ -130,6 +129,8 @@ func _process_flock_idle(delta: float) -> void:
 	_detectNeighbors()
 	_cohesion()
 	_separation()
+	_alignment()
+	_borders(delta)
 	_apply(delta)
 		
 	
@@ -175,6 +176,41 @@ func _separation() -> void:
 			var dist_multiplier: float = 1.0 - (distances[j] / float(PROTECTED_RANGE))
 			var direction: Vector3 = (cell.global_position - neighbors[j].global_position).normalized()
 			cell.acceleration += direction * dist_multiplier * separationWeight
+			
+func _alignment() -> void:
+	for cell in _cells:
+		if cell.neighbors.is_empty():
+			continue
+
+		var average_vel := Vector3.ZERO
+		for neighbor in cell.neighbors:
+			average_vel += neighbor.velocity
+		average_vel /= cell.neighbors.size()
+
+		cell.acceleration += average_vel * alignmentWeight
+
+
+func _borders(delta: float) -> void:
+	var bounds := _get_viewport_world_rect()
+	var top_left: Vector3 = bounds[0]
+	var bottom_right: Vector3 = bounds[1]
+	var mid_point := (top_left + bottom_right) / 2.0
+
+	for cell in _cells:
+		var pos := cell.global_position
+		var out_of_bounds := (
+			pos.x < top_left.x or pos.x > bottom_right.x or
+			pos.z < top_left.z or pos.z > bottom_right.z
+		)
+
+		if out_of_bounds:
+			cell.time_out_of_borders += delta
+			var dir := (mid_point - pos)
+			dir.y = 0.0
+			dir = dir.normalized()
+			cell.acceleration += dir * cell.time_out_of_borders * bordersWeight
+		else:
+			cell.time_out_of_borders = 0.0
 
 
 func _apply(delta: float) -> void:
