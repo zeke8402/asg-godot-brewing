@@ -20,7 +20,8 @@ config/icon="res://icon.svg"
 folder_colors={
 "res://Assets/": "orange",
 "res://Assets/Fruits/": "red",
-"res://Player/": "green"
+"res://Player/": "green",
+"res://Shaders/": "purple"
 }
 
 [input]

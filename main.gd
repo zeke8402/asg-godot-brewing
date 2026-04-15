@@ -5,6 +5,7 @@ var _time_label: Label
 
 func _ready() -> void:
 	_setup_input_map()
+	_build_background()
 	_build_camera()
 	_build_hud()
 	_build_light()
@@ -12,6 +13,18 @@ func _ready() -> void:
 	_build_food()
 	_build_anchor()
 
+func _build_background() -> void:
+	var plane := MeshInstance3D.new()
+	var mesh := PlaneMesh.new()
+	mesh.size = Vector2(500, 500)
+	plane.mesh = mesh
+	
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://Shaders/must.gdshader")
+	plane.material_override = mat
+	plane.position.y = -0.1
+	add_child(plane)
+	
 func _build_anchor() -> void:
 	_anchor = preload("res://Player/player.gd").new()
 	_anchor.name = "Anchor"
@@ -24,10 +37,28 @@ func _build_camera() -> void:
 	cam.look_at(Vector3.ZERO, Vector3.FORWARD)
 
 func _build_light() -> void:
-	var light := OmniLight3D.new()
-	light.position = Vector3(0, 5, 0)
-	light.omni_range = 50.0
-	add_child(light)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-45, 45, 0)
+	sun.light_energy = 1.2
+	sun.shadow_enabled = true
+	add_child(sun)
+	
+	var env_node := WorldEnvironment.new()
+	var env := Environment.new()
+	
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.1, 0.15, 0.2)
+	
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.6, 0.7, 0.8)
+	env.ambient_light_energy = 0.8
+	
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.glow_enabled = true
+	env.glow_intensity = 0.3
+	
+	env_node.environment = env
+	add_child(env_node)
 
 func _build_landmarks() -> void:
 	var positions = [
