@@ -76,7 +76,8 @@ func _build_landmarks() -> void:
 
 func _build_food() -> void:
 	var strawberry := preload("res://Assets/Fruits/strawberry_mesh.gd").new()
-	strawberry.position = Vector3(3, 0, 0)
+	strawberry.position = Vector3(20, 0, 0)
+	strawberry.scale = Vector3(10, 10, 10)
 	add_child(strawberry)
 
 func _setup_input_map() -> void:
