@@ -2,11 +2,22 @@ extends Node3D
 
 func _ready() -> void:
 	_build_mesh()
-
+	
 func _build_mesh() -> void:
+	var mesh := _generate_mesh()
+	
 	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.mesh = _generate_mesh()
+	mesh_instance.mesh = mesh
+	
+	var body := StaticBody3D.new()
+	var collision := CollisionShape3D.new()
+	var shape := ConcavePolygonShape3D.new()
+	shape.set_faces(mesh.get_faces())
+	collision.shape = shape
+	body.add_child(collision)
+	
 	add_child(mesh_instance)
+	add_child(body)
 
 func _generate_mesh() -> ArrayMesh:
 	var vertices := PackedVector3Array()

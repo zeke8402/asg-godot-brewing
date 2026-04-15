@@ -1,4 +1,4 @@
-extends CharacterBody3D
+extends Node3D
 
 const SPEED = 25
 const CELL_COUNT = 100
@@ -28,10 +28,9 @@ var _cells: Array[Node3D] = []
 var _envDims
 
 func _ready() -> void:
-	
 	_envDims = get_viewport()
 	_build_reticle()
-	_spawn_cells()
+	call_deferred("_spawn_cells")
 	
 func _build_reticle() -> void:
 	var label := Label3D.new()
@@ -67,7 +66,7 @@ func _spawn_cells() -> void:
 	var bottom_right: Vector3 = bounds[1]
 	
 	for i in range(CELL_COUNT):
-		var cell: Node3D = preload("res://Player/yeast.gd").new()
+		var cell := preload("res://Scenes/yeast_cell.tscn").instantiate()
 		get_parent().add_child(cell)
 		cell.position = Vector3(
 			randf_range(top_left.x, bottom_right.x),

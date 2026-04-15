@@ -1,6 +1,6 @@
 extends Node3D
 
-var _anchor: CharacterBody3D
+@onready var _flock: Node3D = $Flock
 var _time_label: Label
 
 func _ready() -> void:
@@ -11,7 +11,6 @@ func _ready() -> void:
 	_build_light()
 	_build_landmarks()
 	_build_food()
-	_build_anchor()
 
 func _build_background() -> void:
 	var plane := MeshInstance3D.new()
@@ -24,11 +23,6 @@ func _build_background() -> void:
 	plane.material_override = mat
 	plane.position.y = -0.1
 	add_child(plane)
-	
-func _build_anchor() -> void:
-	_anchor = preload("res://Player/player.gd").new()
-	_anchor.name = "Anchor"
-	add_child(_anchor)
 
 func _build_camera() -> void:
 	var cam := Camera3D.new()
@@ -84,7 +78,7 @@ func _build_landmarks() -> void:
 		add_child(mesh_instance)
 
 func _build_food() -> void:
-	var strawberry := preload("res://Assets/Fruits/strawberry_mesh.gd").new()
+	var strawberry := preload("res://Scenes/strawberry.tscn").instantiate()
 	strawberry.position = Vector3(20, 0, 0)
 	strawberry.scale = Vector3(10, 10, 10)
 	add_child(strawberry)
@@ -121,6 +115,6 @@ func _build_hud() -> void:
 
 func _process(_delta: float) -> void:
 	_time_label.text = "%.2f" % (Time.get_ticks_msec() / 1000.0)
-	if _anchor:
-		get_viewport().get_camera_3d().global_position.x = _anchor.global_position.x
-		get_viewport().get_camera_3d().global_position.z = _anchor.global_position.z
+	if _flock:
+		get_viewport().get_camera_3d().global_position.x = _flock.global_position.x
+		get_viewport().get_camera_3d().global_position.z = _flock.global_position.z

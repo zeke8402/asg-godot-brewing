@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bgbay3t6wdaab"]
+
+[ext_resource type="Script" uid="uid://caxhts17eiqpm" path="res://Scripts/yeast.gd" id="1_78txa"]
+
+[node name="YeastCell" type="Node3D" unique_id=470636476]
+script = ExtResource("1_78txa")

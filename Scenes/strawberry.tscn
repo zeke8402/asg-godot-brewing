@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://gdl8deqlr3kc"]
+
+[ext_resource type="Script" uid="uid://ra106ep6faj3" path="res://Scripts/strawberry.gd" id="1_ru26v"]
+
+[node name="Strawberry" type="Node3D" unique_id=323668968]
+script = ExtResource("1_ru26v")
