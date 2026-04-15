@@ -8,12 +8,20 @@ const RADIUS_STRENGTH = 8.0
 const SEPARATION_RADIUS = 1.2
 const SEPARATION_STRENGTH = 6.0
 const DAMPING = 0.85
+const VISUAL_RANGE = 20
+const PROTECTED_RANGE = 5
+const CENTERING_FACTOR = 5
+const MATCHING_FACTOR = 1
+const AVOIDANCE_FACTOR = 1000
+const MIN_SPEED = -0.1
+const MAX_SPEED = 0.1
 
 func _ready() -> void:
 	_build_mesh()
 	_set_initial_position()
 
 func _build_mesh() -> void:
+	var body = AnimatableBody3D.new()
 	var mesh_instance := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.3
@@ -24,7 +32,8 @@ func _build_mesh() -> void:
 	mat.albedo_color = Color(0.9, 0.95, 0.6)
 	mesh_instance.material_override = mat
 
-	add_child(mesh_instance)
+	body.add_child(mesh_instance)
+	add_child(body)
 
 func _set_initial_position() -> void:
 	var index: int = anchor.cells.find(self)
@@ -37,26 +46,30 @@ func _set_initial_position() -> void:
 	)
 
 func update(delta: float) -> void:
-	if anchor == null:
-		return
+	var pos_avg = anchor.position
+	var vel_avg = anchor.velocity
+	var close_dv = (anchor.position - position) * CENTERING_FACTOR * 10
+	var neighboring_cells = 1
+	
+	for cell in anchor.cells:
+		var distance_to_cell: Vector3 = position - cell.position
 		
-	var to_cell: Vector3 = global_position - anchor.global_position
-
-	if to_cell.length() < 0.001:
-		to_cell = Vector3(1, 0, 0)
-
-	var ideal_position: Vector3 = anchor.global_position + to_cell.normalized() * FLOCK_RADIUS
-	var radius_force: Vector3 = (ideal_position - global_position) * RADIUS_STRENGTH
-	var separation_force := Vector3.ZERO
-
-	for other in anchor.cells:
-		if other == self:
-			continue
-		var diff: Vector3 = global_position - other.global_position
-		var dist: float = diff.length()
-		if dist < SEPARATION_RADIUS and dist > 0.001:
-			separation_force += diff.normalized() * (SEPARATION_RADIUS - dist) * SEPARATION_STRENGTH
-
-	velocity += (radius_force + separation_force) * delta
-	velocity *= DAMPING
-	global_position += velocity * delta
+		if distance_to_cell.length() < VISUAL_RANGE:
+			if distance_to_cell.length_squared() < PROTECTED_RANGE ** 2:
+				close_dv += distance_to_cell + Vector3(0.5, anchor.global_position.y, 0.5)
+			else:
+				pos_avg += cell.position
+				vel_avg += cell.velocity
+				neighboring_cells += 1
+				
+		pos_avg = pos_avg / neighboring_cells
+		vel_avg = vel_avg / neighboring_cells
+			
+		velocity += (pos_avg - position) * CENTERING_FACTOR + (vel_avg - velocity) * MATCHING_FACTOR
+			
+		velocity += close_dv * AVOIDANCE_FACTOR
+		
+		velocity = velocity.clampf(MIN_SPEED, MAX_SPEED) * delta
+		
+		position += velocity
+		

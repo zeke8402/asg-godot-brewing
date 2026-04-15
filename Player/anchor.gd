@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 const SPEED = 10.0
-const CELL_COUNT = 10
+const CELL_COUNT = 100
 const FLOCK_RADIUS = 2.0
 
 var cells: Array[Node3D] = []
@@ -45,10 +45,7 @@ func remove_cell(index: int) -> void:
 	cells.remove_at(index)
 
 func _physics_process(delta: float) -> void:
-	var input_dir := Vector2(
-		Input.get_axis("move_left", "move_right"),
-		Input.get_axis("move_up", "move_down")
-	)
+	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
 	if input_dir.length() > 1.0:
 		input_dir = input_dir.normalized()
