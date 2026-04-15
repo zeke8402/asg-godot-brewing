@@ -107,10 +107,8 @@ func _process_flock(delta: float) -> void:
 		var to_cell: Vector3 = cell.global_position - global_position
 		if to_cell.length() < 0.001:
 			to_cell = Vector3(1, 0, 0)
-
 		var ideal_position: Vector3 = global_position + to_cell.normalized() * FLOCK_RADIUS
 		var radius_force: Vector3 = (ideal_position - cell.global_position) * RADIUS_STRENGTH
-
 		var separation_force := Vector3.ZERO
 		for other in _cells:
 			if other == cell:
@@ -119,10 +117,19 @@ func _process_flock(delta: float) -> void:
 			var dist: float = diff.length()
 			if dist < SEPARATION_RADIUS and dist > 0.001:
 				separation_force += diff.normalized() * (SEPARATION_RADIUS - dist) * SEPARATION_STRENGTH
-
 		cell.velocity += (radius_force + separation_force) * delta
-		cell.velocity *= DAMPING
-		cell.global_position += cell.velocity * delta
+		cell.velocity.y = 0.0
+		cell.velocity *= pow(DAMPING, delta)
+		cell.velocity = cell.velocity.limit_length(cellMaxVelocity)
+
+		var body := cell.get_child(0) as CharacterBody3D
+		if body:
+			body.global_position = cell.global_position
+			var collision := body.move_and_collide(cell.velocity * delta)
+			if collision:
+				cell.velocity = cell.velocity.bounce(collision.get_normal()) * 0.1
+			cell.global_position = body.global_position
+			cell.global_position.y = 0.0
 
 
 func _process_flock_idle(delta: float) -> void:
@@ -133,8 +140,6 @@ func _process_flock_idle(delta: float) -> void:
 	_borders(delta)
 	_apply(delta)
 		
-	
-	
 func _detectNeighbors():
 	for i in range(_cells.size()):
 		_cells[i].neighbors.clear()
@@ -187,7 +192,7 @@ func _alignment() -> void:
 			average_vel += neighbor.velocity
 		average_vel /= cell.neighbors.size()
 
-		cell.acceleration += average_vel * alignmentWeight
+		cell.acceleration += average_vel.normalized() * alignmentWeight
 
 
 func _borders(delta: float) -> void:
@@ -212,11 +217,20 @@ func _borders(delta: float) -> void:
 		else:
 			cell.time_out_of_borders = 0.0
 
-
+		
 func _apply(delta: float) -> void:
 	for cell in _cells:
 		cell.velocity += cell.acceleration * delta
 		cell.velocity.y = 0.0
+		cell.velocity *= pow(DAMPING, delta)
 		cell.velocity = cell.velocity.limit_length(cellMaxVelocity)
 		cell.acceleration = Vector3.ZERO
-		cell.global_position += cell.velocity * delta
+
+		var body := cell.get_child(0) as CharacterBody3D
+		if body:
+			body.global_position = cell.global_position
+			var collision := body.move_and_collide(cell.velocity * delta)
+			if collision:
+				cell.velocity = cell.velocity.bounce(collision.get_normal()) * 0.1
+			cell.global_position = body.global_position
+			cell.global_position.y = 0.0

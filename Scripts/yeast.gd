@@ -17,6 +17,15 @@ func _ready() -> void:
 
 func _build_mesh() -> void:
 	var body := CharacterBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 2
+
+	var collision := CollisionShape3D.new()
+	var shape := SphereShape3D.new()
+	shape.radius = 0.3
+	collision.shape = shape
+	body.add_child(collision)
+
 	var mesh_instance := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.3
@@ -28,4 +37,3 @@ func _build_mesh() -> void:
 	body.add_child(mesh_instance)
 
 	add_child(body)
-	

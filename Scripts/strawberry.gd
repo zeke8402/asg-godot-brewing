@@ -15,6 +15,8 @@ func _build_mesh() -> void:
 	shape.set_faces(mesh.get_faces())
 	collision.shape = shape
 	body.add_child(collision)
+	body.collision_layer = 2
+	body.collision_mask = 0  # doesn't need to detect anything
 	
 	add_child(mesh_instance)
 	add_child(body)
