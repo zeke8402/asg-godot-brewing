@@ -1,7 +1,7 @@
 extends Node3D
 
-const SPEED = 25
-const CELL_COUNT = 100
+const SPEED = 20
+const CELL_COUNT = 1
 const FLOCK_RADIUS = 2.0
 const RADIUS_STRENGTH = 100.0
 const SEPARATION_RADIUS = 1.2
@@ -10,22 +10,25 @@ const DAMPING = 0.85
 const PROTECTED_RANGE = 5
 const CENTERING_FACTOR = 5
 const MATCHING_FACTOR = 1
-const AVOIDANCE_FACTOR = 1000
+const AVOIDANCE_FACTOR = 500
 
 var _cells: Array[Node3D] = []
 
 # Rule weights
 @export var cellMaxVelocity: float = 10
-@export var cohesionWeight: float = 0.3
-@export var separationWeight: float = 50
-@export var alignmentWeight: float = 1
+@export var cohesionWeight: float = 0.1
+@export var separationWeight: float = 3
+@export var alignmentWeight: float = 10
+@export var foodWeight: float = 20
 @export var visualRange: float = 2
-
+@export var foodRange: float = 20
+@export var replicateBurstStrength: float = 800.0
 
 @export var bordersWeight: float = 300
 @export var predatorWeight: float = 500
 
 var _envDims
+var _rallying: bool = false
 
 func _ready() -> void:
 	_envDims = get_viewport()
@@ -61,22 +64,30 @@ func _get_viewport_world_rect() -> Array:
 
 
 func _spawn_cells() -> void:
-	var bounds := _get_viewport_world_rect()
-	var top_left: Vector3 = bounds[0]
-	var bottom_right: Vector3 = bounds[1]
+	var cell := preload("res://Scenes/yeast.tscn").instantiate()
+	add_child(cell)
+	cell.top_level = true
+	cell.position = Vector3.ZERO
+	_cells.append(cell)
 	
-	for i in range(CELL_COUNT):
-		var cell := preload("res://Scenes/yeast_cell.tscn").instantiate()
-		get_parent().add_child(cell)
-		cell.position = Vector3(
-			randf_range(top_left.x, bottom_right.x),
-			0.0,
-			randf_range(top_left.z, bottom_right.z)
-		)
-		_cells.append(cell)
-		
-		if OS.is_debug_build():
-			_add_range_indicator(cell)
+	if OS.is_debug_build():
+		_add_range_indicator(cell)
+		_add_food_range_indicator(cell)
+			
+func spawn_cell_at(pos: Vector3, burst_dir: Vector3 = Vector3.ZERO) -> void:
+	var cell: Node3D = preload("res://Scenes/yeast.tscn").instantiate()
+	add_child(cell)
+	cell.top_level = true
+	cell.position = pos
+	cell.burst_timer = 0.3
+	cell.velocity = burst_dir * replicateBurstStrength
+	_cells.append(cell)
+	if OS.is_debug_build():
+		_add_range_indicator(cell)
+		_add_food_range_indicator(cell)
+
+func remove_cell(cell: Node3D) -> void:
+	_cells.erase(cell)
 		
 func _add_range_indicator(cell: Node3D) -> void:
 	var mesh_instance := MeshInstance3D.new()
@@ -89,6 +100,18 @@ func _add_range_indicator(cell: Node3D) -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mesh_instance.material_override = mat
 	cell.add_child(mesh_instance)
+	
+func _add_food_range_indicator(cell: Node3D) -> void:
+	var mesh_instance := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = foodRange - 0.1
+	torus.outer_radius = foodRange
+	mesh_instance.mesh = torus
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0, 1, 0, 0.2)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mesh_instance.material_override = mat
+	cell.add_child(mesh_instance)
 
 func _process(delta: float) -> void:
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -96,10 +119,15 @@ func _process(delta: float) -> void:
 		input_dir = input_dir.normalized()
 	position.x += input_dir.x * SPEED * delta
 	position.z += input_dir.y * SPEED * delta
-	
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+
+	if Input.is_action_pressed('rally'):
+		if not _rallying:
+			_rallying = true
+			for cell in _cells:
+				cell.reset()
 		_process_flock(delta)
 	else:
+		_rallying = false
 		_process_flock_idle(delta)
 
 func _process_flock(delta: float) -> void:
@@ -134,12 +162,20 @@ func _process_flock(delta: float) -> void:
 
 func _process_flock_idle(delta: float) -> void:
 	_detectNeighbors()
-	_cohesion()
-	_separation()
-	_alignment()
-	_borders(delta)
-	_apply(delta)
+	_detectFood()
+	_boids_food()
+	
+	for cell in _cells:
+		if not cell.food_targets.is_empty():
+			continue
+		_boids_cohesion_for(cell)
+		_boids_separation_for(cell)
+		_boids_alignment_for(cell)
+		_boids_borders_for(cell, delta)
 		
+	_boids_apply(delta)
+	
+
 func _detectNeighbors():
 	for i in range(_cells.size()):
 		_cells[i].neighbors.clear()
@@ -154,72 +190,84 @@ func _detectNeighbors():
 				_cells[i].neighborsDistances.append(distance)
 				_cells[j].neighborsDistances.append(distance)
 				
-func _cohesion() -> void:
+func _detectFood() -> void:
+	var food_items: Array = []
+	for node in get_parent().get_children():
+		if node.is_in_group("food"):
+			food_items.append(node)
 	for cell in _cells:
-		if cell.neighbors.is_empty():
-			continue
+		cell.food_targets.clear()
+		for food in food_items:
+			var food_radius: float = food.get("radius") if food.get("radius") != null else 0.0
+			var dist := cell.global_position.distance_to(food.global_position)
+			if dist <= foodRange + food_radius:
+				cell.food_targets.append(food)
 
-		var average_pos := Vector3.ZERO
-		for neighbor in cell.neighbors:
-			average_pos += neighbor.global_position
-		average_pos /= cell.neighbors.size()
+func _boids_cohesion_for(cell: Node3D) -> void:
+	if cell.neighbors.is_empty():
+		return
 
-		cell.acceleration += (average_pos - cell.global_position).normalized() * cohesionWeight
+	var average_pos := Vector3.ZERO
+	for neighbor in cell.neighbors:
+		average_pos += neighbor.global_position
+	average_pos /= cell.neighbors.size()
+
+	cell.acceleration += (average_pos - cell.global_position).normalized() * cohesionWeight
 		
-func _separation() -> void:
-	for cell in _cells:
-		if cell.neighbors.is_empty():
+func _boids_separation_for(cell: Node3D) -> void:
+	if cell.neighbors.is_empty():
+		return
+
+	var neighbors = cell.neighbors
+	var distances = cell.neighborsDistances
+
+	for j in range(neighbors.size()):
+		if distances[j] >= PROTECTED_RANGE:
 			continue
 
-		var neighbors = cell.neighbors
-		var distances = cell.neighborsDistances
-
-		for j in range(neighbors.size()):
-			if distances[j] >= PROTECTED_RANGE:
-				continue
-
-			var dist_multiplier: float = 1.0 - (distances[j] / float(PROTECTED_RANGE))
-			var direction: Vector3 = (cell.global_position - neighbors[j].global_position).normalized()
-			cell.acceleration += direction * dist_multiplier * separationWeight
+		var dist_multiplier: float = 1.0 - (distances[j] / float(PROTECTED_RANGE))
+		var direction: Vector3 = (cell.global_position - neighbors[j].global_position).normalized()
+		cell.acceleration += direction * dist_multiplier * separationWeight
 			
-func _alignment() -> void:
-	for cell in _cells:
-		if cell.neighbors.is_empty():
-			continue
+func _boids_alignment_for(cell: Node3D) -> void:
+	if cell.neighbors.is_empty():
+		return
 
-		var average_vel := Vector3.ZERO
-		for neighbor in cell.neighbors:
-			average_vel += neighbor.velocity
-		average_vel /= cell.neighbors.size()
+	var average_vel := Vector3.ZERO
+	for neighbor in cell.neighbors:
+		average_vel += neighbor.velocity
+	average_vel /= cell.neighbors.size()
 
-		cell.acceleration += average_vel.normalized() * alignmentWeight
+	cell.acceleration += average_vel.normalized() * alignmentWeight
 
 
-func _borders(delta: float) -> void:
+func _boids_borders_for(cell: Node3D, delta: float) -> void:
 	var bounds := _get_viewport_world_rect()
 	var top_left: Vector3 = bounds[0]
 	var bottom_right: Vector3 = bounds[1]
 	var mid_point := (top_left + bottom_right) / 2.0
 
-	for cell in _cells:
-		var pos := cell.global_position
-		var out_of_bounds := (
-			pos.x < top_left.x or pos.x > bottom_right.x or
-			pos.z < top_left.z or pos.z > bottom_right.z
-		)
+	var pos := cell.global_position
+	var out_of_bounds := (
+		pos.x < top_left.x or pos.x > bottom_right.x or
+		pos.z < top_left.z or pos.z > bottom_right.z
+	)
 
-		if out_of_bounds:
-			cell.time_out_of_borders += delta
-			var dir := (mid_point - pos)
-			dir.y = 0.0
-			dir = dir.normalized()
-			cell.acceleration += dir * cell.time_out_of_borders * bordersWeight
-		else:
-			cell.time_out_of_borders = 0.0
+	if out_of_bounds:
+		cell.time_out_of_borders += delta
+		var dir := (mid_point - pos)
+		dir.y = 0.0
+		dir = dir.normalized()
+		cell.acceleration += dir * cell.time_out_of_borders * bordersWeight
+	else:
+		cell.time_out_of_borders = 0.0
 
 		
-func _apply(delta: float) -> void:
+func _boids_apply(delta: float) -> void:
 	for cell in _cells:
+		if cell.state == cell.State.EATING:
+			continue
+			
 		cell.velocity += cell.acceleration * delta
 		cell.velocity.y = 0.0
 		cell.velocity *= pow(DAMPING, delta)
@@ -231,6 +279,33 @@ func _apply(delta: float) -> void:
 			body.global_position = cell.global_position
 			var collision := body.move_and_collide(cell.velocity * delta)
 			if collision:
-				cell.velocity = cell.velocity.bounce(collision.get_normal()) * 0.1
+				var collider = collision.get_collider()
+				if collider and collider.get_parent().is_in_group("food"):
+					cell.state = cell.State.EATING
+					cell.velocity = Vector3.ZERO
+					cell.current_food = collider.get_parent()
+				else:
+					cell.velocity = cell.velocity.bounce(collision.get_normal()) * 0.1
 			cell.global_position = body.global_position
 			cell.global_position.y = 0.0
+			
+			
+func _boids_food() -> void:
+	for cell in _cells:
+		if cell.food_targets.is_empty():
+			continue
+
+		var closest_food: Node3D = null
+		var closest_dist := foodRange
+		for food in cell.food_targets:
+			var dist := cell.global_position.distance_to(food.global_position)
+			if dist < closest_dist:
+				closest_dist = dist
+				closest_food = food
+
+		if closest_food == null:
+			continue
+
+		var direction := (closest_food.global_position - cell.global_position).normalized()
+		direction.y = 0.0
+		cell.acceleration = direction * foodWeight

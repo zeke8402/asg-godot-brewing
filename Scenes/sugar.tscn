@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://x7f2a53nv0kw"]
+
+[ext_resource type="Script" uid="uid://d23thv6xlug2o" path="res://Scripts/sugar.gd" id="1_rsg81"]
+
+[node name="Sugar" type="Node3D" unique_id=1967854958]
+script = ExtResource("1_rsg81")

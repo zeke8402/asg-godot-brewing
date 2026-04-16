@@ -1,6 +1,9 @@
 extends Node3D
 
+var radius: float = 1.0
+
 func _ready() -> void:
+	add_to_group('food')
 	_build_mesh()
 	
 func _build_mesh() -> void:

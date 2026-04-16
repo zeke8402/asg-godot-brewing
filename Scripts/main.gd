@@ -76,12 +76,24 @@ func _build_landmarks() -> void:
 
 		mesh_instance.position = pos
 		add_child(mesh_instance)
-
+	
 func _build_food() -> void:
-	var strawberry := preload("res://Scenes/strawberry.tscn").instantiate()
-	strawberry.position = Vector3(20, 0, 0)
-	strawberry.scale = Vector3(10, 10, 10)
-	add_child(strawberry)
+	_spawn_food_at(Vector3(20, 0, 0))
+	
+	for i in range(50):
+		var pos := Vector3(
+			randf_range(-100.0, 100.0),
+			0.0,
+			randf_range(-100.0, 100.0)
+		)
+		_spawn_food_at(pos)
+
+func _spawn_food_at(pos: Vector3) -> void:
+	var sugar := preload("res://Scenes/sugar.tscn").instantiate()
+	sugar.position = pos
+	sugar.scale = Vector3(10, 10, 10)
+	sugar.radius = 10.0
+	add_child(sugar)
 
 func _setup_input_map() -> void:
 	_add_action("move_up",    KEY_W,  JOY_AXIS_LEFT_Y, -1)
@@ -116,5 +128,10 @@ func _build_hud() -> void:
 func _process(_delta: float) -> void:
 	_time_label.text = "%.2f" % (Time.get_ticks_msec() / 1000.0)
 	if _flock:
-		get_viewport().get_camera_3d().global_position.x = _flock.global_position.x
-		get_viewport().get_camera_3d().global_position.z = _flock.global_position.z
+		var camera := get_viewport().get_camera_3d()
+		camera.global_position.x = _flock.global_position.x
+		camera.global_position.z = _flock.global_position.z
+		
+		var cell_count: int = _flock._cells.size()
+		var target_y: float = clamp(float(cell_count) * 0.5, 10.0, 200.0)
+		camera.global_position.y = lerp(camera.global_position.y, target_y, 0.05)
