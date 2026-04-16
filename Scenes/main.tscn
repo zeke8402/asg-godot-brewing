@@ -12,3 +12,6 @@ cameraZoomSpeed = 0.03
 script = ExtResource("2_8gbba")
 cohesionWeight = 50.0
 separationWeight = 2.0
+alignmentWeight = 3.0
+visualRange = 4.0
+foodRange = 2.0

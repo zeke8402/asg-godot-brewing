@@ -8,8 +8,13 @@ var time_out_of_borders: float = 0.0
 @export var maxAcceleration: float = 10.0
 @export var rotationOffset: float = PI/2
 
-@export var amountToReplicate: float = 2
+# Yeast reproduction stats
+@export var amountToReplicate: float = 10
 @export var maxReplications: float = 25
+
+# Yeast lifespan
+@export var lifespan: float = 120.0
+var age: float = 0.0
 
 # Boids + Zekes arrays for drifting toward objects
 var neighbors := []
@@ -58,12 +63,13 @@ func _build_mesh() -> void:
 
 	add_child(body)
 	
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
+	age += delta
+	if age >= lifespan:
+		_die()
 	if state == State.EATING:
 		_process_eating(delta)
 		
-		
-
 func _process_eating(delta: float) -> void:
 	if burst_timer > 0.0:
 		burst_timer -= delta
