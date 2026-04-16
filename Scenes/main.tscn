@@ -5,6 +5,8 @@
 
 [node name="Root" type="Node3D" unique_id=71723246]
 script = ExtResource("1_bo1nx")
+cameraZoomPerCell = 0.05
+cameraZoomSpeed = 0.03
 
 [node name="Flock" type="Node3D" parent="." unique_id=1322431668]
 script = ExtResource("2_8gbba")

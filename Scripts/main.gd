@@ -1,7 +1,12 @@
 extends Node3D
 
 @onready var _flock: Node3D = $Flock
+
+@export var cameraZoomPerCell: float = 0.5
+@export var cameraZoomSpeed: float = 0.05
+
 var _time_label: Label
+var _yeast_label: Label
 
 func _ready() -> void:
 	_setup_input_map()
@@ -117,21 +122,33 @@ func _add_action(action: String, key: Key, axis: JoyAxis, axis_value: float) -> 
 func _build_hud() -> void:
 	var canvas := CanvasLayer.new()
 	add_child(canvas)
-
+	
 	_time_label = Label.new()
-	_time_label.position = Vector2(10, -10)
-	_time_label.anchor_bottom = 1.0
-	_time_label.anchor_top = 1.0
-	_time_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_time_label.anchor_left = 1.0
+	_time_label.anchor_right = 1.0
+	_time_label.anchor_top = 0.0
+	_time_label.anchor_bottom = 0.0
+	_time_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_time_label.position = Vector2(-10, 10)
 	canvas.add_child(_time_label)
+	
+	_yeast_label = Label.new()
+	_yeast_label.anchor_left = 0.5
+	_yeast_label.anchor_right = 0.5
+	_yeast_label.anchor_top = 0.0
+	_yeast_label.anchor_bottom = 0.0
+	_yeast_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_yeast_label.position = Vector2(0, 10)
+	canvas.add_child(_yeast_label)
 
 func _process(_delta: float) -> void:
 	_time_label.text = "%.2f" % (Time.get_ticks_msec() / 1000.0)
+	_yeast_label.text = "Yeast: %d" % _flock._cells.size()
 	if _flock:
 		var camera := get_viewport().get_camera_3d()
 		camera.global_position.x = _flock.global_position.x
 		camera.global_position.z = _flock.global_position.z
 		
 		var cell_count: int = _flock._cells.size()
-		var target_y: float = clamp(float(cell_count) * 0.5, 10.0, 200.0)
-		camera.global_position.y = lerp(camera.global_position.y, target_y, 0.05)
+		var target_y: float = clamp(float(cell_count) * cameraZoomPerCell, 10.0, 200.0)
+		camera.global_position.y = lerp(camera.global_position.y, target_y, cameraZoomSpeed)

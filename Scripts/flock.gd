@@ -87,6 +87,7 @@ func spawn_cell_at(pos: Vector3, burst_dir: Vector3 = Vector3.ZERO) -> void:
 		_add_food_range_indicator(cell)
 
 func remove_cell(cell: Node3D) -> void:
+	print('erasing')
 	_cells.erase(cell)
 		
 func _add_range_indicator(cell: Node3D) -> void:
@@ -284,6 +285,7 @@ func _boids_apply(delta: float) -> void:
 					cell.state = cell.State.EATING
 					cell.velocity = Vector3.ZERO
 					cell.current_food = collider.get_parent()
+					collider.get_parent().increment_eaters()
 				else:
 					cell.velocity = cell.velocity.bounce(collision.get_normal()) * 0.1
 			cell.global_position = body.global_position

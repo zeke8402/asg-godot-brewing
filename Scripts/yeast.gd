@@ -21,7 +21,11 @@ enum State { FLOCKING, EATING }
 var state: State = State.FLOCKING
 
 var eat_timer: float = 0.0 # How long before food units are gained.
-var current_food: Node3D = null
+var current_food: Node3D = null:
+	set(value) :
+		if is_instance_valid(current_food):
+			current_food.stop_eating()
+		current_food = value
 var food_consumed: int = 0
 var replications: int = 0
 
@@ -58,6 +62,7 @@ func _physics_process(delta: float) -> void:
 	if state == State.EATING:
 		_process_eating(delta)
 		
+		
 
 func _process_eating(delta: float) -> void:
 	if burst_timer > 0.0:
@@ -83,6 +88,7 @@ func _process_eating(delta: float) -> void:
 		global_position.y = 0.0
 
 	eat_timer += delta
+	
 	if eat_timer >= 1.0:
 		eat_timer = 0.0
 		food_consumed += current_food.eat()
@@ -92,7 +98,6 @@ func _process_lifecycle() -> void:
 	if food_consumed >= amountToReplicate:
 		food_consumed = 0
 		replications += 1
-		print("replicating! replications: ", replications)
 		if replications >= maxReplications:
 			_die()
 		else:
@@ -115,6 +120,8 @@ func _die() -> void:
 
 func reset() -> void:
 	state = State.FLOCKING
+	if is_instance_valid(current_food):
+		current_food.stop_eating()
 	current_food = null
 	eat_timer = 0.0
 	velocity = Vector3.ZERO
