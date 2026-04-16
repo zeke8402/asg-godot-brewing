@@ -9,11 +9,11 @@ var time_out_of_borders: float = 0.0
 @export var rotationOffset: float = PI/2
 
 # Yeast reproduction stats
-@export var amountToReplicate: float = 10
+@export var amountToReplicate: float = 2
 @export var maxReplications: float = 25
 
 # Yeast lifespan
-@export var lifespan: float = 120.0
+@export var lifespan: float = 20
 var age: float = 0.0
 
 # Boids + Zekes arrays for drifting toward objects
