@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://ddeerlh3usjh"]
+
+[ext_resource type="Script" uid="uid://bhu2lon5ctb2i" path="res://Scenes/debug/test_enemy_flock.gd" id="1_1orqg"]
+[ext_resource type="Script" uid="uid://l0l3dx1ptj3f" path="res://Scripts/enemy_flock.gd" id="1_g6mu8"]
+[ext_resource type="Script" uid="uid://8owh2rqrroha" path="res://Scripts/flock.gd" id="3_tgi0v"]
+
+[node name="TestEnemyFlock" type="Node3D" unique_id=684222419]
+script = ExtResource("1_1orqg")
+
+[node name="EnemyFlock" type="Node3D" parent="." unique_id=2062966430]
+script = ExtResource("1_g6mu8")
+cellMaxVelocity = 2.0
+cohesionWeight = 20.0
+foodRange = 5.0
+
+[node name="Flock" type="Node3D" parent="." unique_id=227961708]
+script = ExtResource("3_tgi0v")

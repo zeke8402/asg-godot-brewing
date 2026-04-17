@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ej1csyj5wkrx"]
+
+[ext_resource type="Script" uid="uid://8owh2rqrroha" path="res://Scripts/flock.gd" id="1_uwyvn"]
+
+[node name="Flock" type="Node3D" unique_id=348390234]
+script = ExtResource("1_uwyvn")

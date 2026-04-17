@@ -1,7 +1,7 @@
 extends Node3D
 
 const SPEED = 20
-const CELL_COUNT = 1
+const CELL_COUNT = 8
 const FLOCK_RADIUS = 2.0
 const RADIUS_STRENGTH = 100.0
 const SEPARATION_RADIUS = 1.2
@@ -13,7 +13,6 @@ const MATCHING_FACTOR = 1
 const AVOIDANCE_FACTOR = 25
 
 # parameters for optimizing swarm
-var _process_timer: float = 0.0
 const PROCESS_INTERVAL: float = 0.016
 
 var _cells: Array[Node3D] = []
@@ -23,8 +22,8 @@ var _cells: Array[Node3D] = []
 @export var cohesionWeight: float = 0.1
 @export var separationWeight: float = 3
 @export var alignmentWeight: float = 10
-@export var foodWeight: float = 20
-@export var visualRange: float = 15
+@export var foodWeight: float = 5
+@export var visualRange: float = 30
 @export var foodRange: float = 20
 @export var replicateBurstStrength: float = 800.0
 
@@ -32,7 +31,6 @@ var _cells: Array[Node3D] = []
 @export var predatorWeight: float = 500
 
 var _envDims
-var _rallying: bool = false
 
 
 func _ready() -> void:
@@ -69,22 +67,15 @@ func _get_viewport_world_rect() -> Array:
 
 
 func _spawn_cells() -> void:
-	var bounds := _get_viewport_world_rect()
-	var top_left: Vector3 = bounds[0]
-	var bottom_right: Vector3 = bounds[1]
-	
 	for i in range(CELL_COUNT):
-		var cell := preload("res://Scenes/yeast.tscn").instantiate()
+		var cell := preload("res://Scenes/enemy_yeast.tscn").instantiate()
 		add_child(cell)
 		cell.top_level = true
-		if CELL_COUNT > 1:
-			cell.position = Vector3(
-				randf_range(top_left.x, bottom_right.x),
-				0.0,
-				randf_range(top_left.z, bottom_right.z)
-			)
-		else:
-			cell.position = Vector3(0,0,0)
+		cell.position = global_position + Vector3(
+			randf_range(-5.0, 5.0),
+			0.0,
+			randf_range(-5.0, 5.0)
+		)
 		_cells.append(cell)
 		
 		if OS.is_debug_build():
@@ -92,7 +83,7 @@ func _spawn_cells() -> void:
 			_add_food_range_indicator(cell)
 			
 func spawn_cell_at(pos: Vector3, burst_dir: Vector3 = Vector3.ZERO) -> void:
-	var cell: Node3D = preload("res://Scenes/yeast.tscn").instantiate()
+	var cell: Node3D = preload("res://Scenes/enemy_yeast.tscn").instantiate()
 	add_child(cell)
 	cell.top_level = true
 	cell.position = pos
@@ -140,19 +131,7 @@ func _process(delta: float) -> void:
 	position.x += input_dir.x * SPEED * delta
 	position.z += input_dir.y * SPEED * delta
 
-	_process_timer += delta
-	if _process_timer >= PROCESS_INTERVAL:
-		var scaled_delta := _process_timer
-		_process_timer = 0.0
-		if Input.is_action_pressed('rally'):
-			if not _rallying:
-				_rallying = true
-				for cell in _cells:
-					cell.reset()
-			_process_flock(scaled_delta)
-		else:
-			_rallying = false
-			_process_flock_idle(scaled_delta)
+	_process_flock_idle(delta)
 
 func _process_flock(delta: float) -> void:
 	for cell in _cells:
@@ -289,31 +268,16 @@ func _boids_borders_for(cell: Node3D, delta: float) -> void:
 		
 func _boids_apply(delta: float) -> void:
 	for cell in _cells:
-		if not cell.global_position.is_finite():
-			print("corrupt cell position detected, removing: ", cell)
-			cell.queue_free()
-			_cells.erase(cell)
-			continue
-
-		var body := cell.get_child(0) as CharacterBody3D
-
 		if cell.state == cell.State.EATING:
-			if body:
-				body.global_position = cell.global_position
-				var collision := body.move_and_collide(Vector3.ZERO)
-				if collision:
-					var collider = collision.get_collider()
-					if collider and collider.get_parent().is_in_group("enemy"):
-						collider.get_parent()._die()
-						cell._die()
 			continue
-
+			
 		cell.velocity += cell.acceleration * delta
 		cell.velocity.y = 0.0
 		cell.velocity *= pow(DAMPING, delta)
 		cell.velocity = cell.velocity.limit_length(cellMaxVelocity)
 		cell.acceleration = Vector3.ZERO
 
+		var body := cell.get_child(0) as CharacterBody3D
 		if body:
 			body.global_position = cell.global_position
 			var collision := body.move_and_collide(cell.velocity * delta)
@@ -324,14 +288,10 @@ func _boids_apply(delta: float) -> void:
 					cell.velocity = Vector3.ZERO
 					cell.current_food = collider.get_parent()
 					collider.get_parent().increment_eaters()
-				elif collider and collider.get_parent().is_in_group("enemy"):
-					collider.get_parent()._die()
-					cell._die()
 				else:
 					cell.velocity = cell.velocity.bounce(collision.get_normal()) * 0.1
 			cell.global_position = body.global_position
 			cell.global_position.y = 0.0
-
 			
 			
 func _boids_food() -> void:

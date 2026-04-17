@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://bdg01yfsei7hr"]
+
+[ext_resource type="Script" uid="uid://2bf43dw7bfd" path="res://Scripts/enemy_yeast.gd" id="1_j385e"]
+
+[node name="EnemyYeast" type="Node3D" unique_id=102647472]
+script = ExtResource("1_j385e")
+maxVelocity = 0.5
+maxAcceleration = 5.0
+amountToReplicate = 5.0
+maxReplications = 10.0
+lifespan = 60.0

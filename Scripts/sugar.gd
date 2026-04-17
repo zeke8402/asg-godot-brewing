@@ -10,7 +10,8 @@ var _being_eaten: bool = false:
 		if _feed_indicator:
 			_feed_indicator.visible = value
 
-var _label: Label3D
+var _label: Label
+var _label_canvas: CanvasLayer
 var units: int = 0
 var total_units: int = 0
 var _eating_count: int = 0:
@@ -52,37 +53,39 @@ func _build_feed_indicator() -> void:
 	add_child(_feed_indicator)
 	
 func _build_label() -> void:
-	_label = Label3D.new()
-	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.no_depth_test = true
-	_label.font_size = 64
-	_label.modulate = Color(1.0, 1.0, 1.0)
-	_label.outline_size = 8
-	_label.outline_modulate = Color(0.9, 0.4, 0.6)
-	_label.position.y = 0.5
-	_update_label()
-	add_child(_label)
+	_label_canvas = CanvasLayer.new()
+	_label_canvas.layer = 15
+	add_child(_label_canvas)
+	
+	_label = Label.new()
+	_label.add_theme_color_override("font_color", Color(1.0, 0.7, 0.8))
+	_label.add_theme_font_size_override("font_size", 64)
+	_label.visible = false
+	_label_canvas.add_child(_label)
 
 func _update_label() -> void:
 	if _label:
 		_label.text = "%d/%d" % [units, total_units]
+		_label.visible = units < total_units
 		
 func _update_feed_indicator() -> void:
 	if _feed_indicator:
 		var torus := _feed_indicator.mesh as TorusMesh
 		if torus:
-			torus.inner_radius = scale.x * 0.9
-			torus.outer_radius = scale.x * 1.0
+			var outer: float = max(scale.x * 1.0, 0.2)
+			var inner: float = max(scale.x * 0.9, outer - 0.1)
+			torus.outer_radius = outer
+			torus.inner_radius = inner
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	rotation_speed = Vector3(
-		randf_range(-0.5, 0.5),
-		randf_range(-0.5, 0.5),
-		randf_range(-0.5, 0.5)
+		randf_range(-0.08, 0.08),
+		randf_range(-0.08, 0.08),
+		randf_range(-0.08, 0.08),
 	)
 	
-	units = randi_range(10, 1000)
+	units = randi_range(10, 100)
 	total_units = units
 	_update_scale()
 	drift = Vector3(
@@ -97,12 +100,14 @@ func _ready() -> void:
 	_build_label()
 	
 func _update_scale() -> void:
-	var s: float = float(units) / 100.0
+	var s: float = max(float(units) / 20.0, 0.01)
 	scale = Vector3(s, s, s)
 	radius = s
 	_update_feed_indicator()
 
 func _process(delta: float) -> void:
+	if not is_instance_valid(self):
+		return
 	var body := get_child(0) as CharacterBody3D
 	if body:
 		body.global_position = position
@@ -111,6 +116,11 @@ func _process(delta: float) -> void:
 		position.y = 0.0
 		
 	rotation += rotation_speed * delta
+	if _label and _label.visible:
+		var camera := get_viewport().get_camera_3d()
+		if camera:
+			var screen_pos := camera.unproject_position(global_position)
+			_label.position = screen_pos - Vector2(_label.size.x / 2.0, _label.size.y / 2.0)
 	_update_label()
 	
 	if _feed_indicator:

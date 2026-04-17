@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://bl7l78wvbmr24"]
+
+[ext_resource type="Script" uid="uid://bx2ib24j6imtp" path="res://Scenes/debug/test_player_flock.gd" id="1_p1kak"]
+[ext_resource type="Script" uid="uid://8owh2rqrroha" path="res://Scripts/flock.gd" id="2_2uqko"]
+
+[node name="TestBoids" type="Node3D" unique_id=38585168]
+script = ExtResource("1_p1kak")
+
+[node name="Flock" type="Node3D" parent="." unique_id=147583814]
+script = ExtResource("2_2uqko")
+cohesionWeight = 5.0
+separationWeight = 10.0
+alignmentWeight = 50.0

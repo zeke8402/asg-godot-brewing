@@ -11,10 +11,10 @@ var time_out_of_borders: float = 0.0
 # Yeast reproduction stats
 @export var amountToReplicate: float = 3
 @export var maxReplications: float = 25
-@export var timeToEat: float = 1.0
+@export var timeToEat: float = 5
 
 # Yeast lifespan
-@export var lifespan: float = 30
+@export var lifespan: float = 60
 var age: float = 0.0
 
 # Boids + Zekes arrays for drifting toward objects
@@ -38,12 +38,13 @@ var replications: int = 0
 var burst_timer: float = 0.0
 
 func _ready() -> void:
+	add_to_group("enemy")
 	_build_mesh()
 
 func _build_mesh() -> void:
 	var body := CharacterBody3D.new()
-	body.collision_layer = 1
-	body.collision_mask = 2 | 4
+	body.collision_layer = 4
+	body.collision_mask = 2
 	body.motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 
 	var collision := CollisionShape3D.new()
@@ -58,13 +59,14 @@ func _build_mesh() -> void:
 	sphere.height = 0.6
 	mesh_instance.mesh = sphere
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.9, 0.95, 0.6)
+	mat.albedo_color = Color(1, 0, 0.6)
 	mesh_instance.material_override = mat
 	body.add_child(mesh_instance)
 
 	add_child(body)
 	
 func _process(delta: float) -> void:
+		
 	age += delta
 	if age >= lifespan:
 		_die()
@@ -126,11 +128,3 @@ func _die() -> void:
 	if flock and flock.has_method("remove_cell"):
 		flock.remove_cell(self)
 	queue_free()
-
-func reset() -> void:
-	state = State.FLOCKING
-	if is_instance_valid(current_food):
-		current_food.stop_eating()
-	current_food = null
-	eat_timer = 0.0
-	velocity = Vector3.ZERO
