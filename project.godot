@@ -15,9 +15,14 @@ run/main_scene="uid://bq2nva3dhtyeo"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+Ethanol="*uid://d4e1ui5vgny06"
+
 [file_customization]
 
 folder_colors={
+"res://Autoload/": "orange",
 "res://Scenes/": "blue",
 "res://Scripts/": "green",
 "res://Shaders/": "purple"

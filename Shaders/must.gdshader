@@ -1,27 +1,18 @@
-shader_type spatial;
-render_mode cull_disabled;
+shader_type canvas_item;
 
-uniform float speed : hint_range(0.0, 2.0) = 0.3;
-uniform float wave_strength : hint_range(0.0, 1.0) = 0.08;
-uniform float tiling : hint_range(1.0, 20.0) = 6.0;
-uniform vec4 shallow_color : source_color = vec4(0.18, 0.62, 0.75, 0.85);
-uniform vec4 deep_color : source_color = vec4(0.05, 0.25, 0.45, 0.95);
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
+uniform float clarity : hint_range(0.0, 1.0) = 0.0;
 
 void fragment() {
-	vec2 uv = UV * tiling;
-	float time = TIME * speed;
-	
-	float wave1 = sin(uv.x * 2.0 + time) * cos(uv.y * 1.5 + time * 0.8);
-	float wave2 = sin(uv.x * 3.5 - time * 1.2) * cos(uv.y * 2.5 + time * 0.5);
-	float wave3 = sin((uv.x + uv.y) * 2.0 + time * 0.7);
-	
-	float wave = (wave1 + wave2 + wave3) / 3.0;
-	
-	vec4 color = mix(shallow_color, deep_color, wave * 0.5 + 0.5);
-	
-	ALBEDO = color.rgb;
-	ALPHA = color.a;
-	METALLIC = 0.3;
-	ROUGHNESS = 0.1;
-	SPECULAR = 0.8;
+	vec2 uv = SCREEN_UV;
+	vec2 center = uv - 0.5;
+	float dist = length(center);
+
+	float vignette = smoothstep(0.15 - clarity * 0.15, 0.6 - clarity * 0.2, dist);
+
+	vec4 screen = texture(SCREEN_TEXTURE, uv);
+	vec4 must_color = vec4(0.35, 0.28, 0.05, 1.0);
+
+	float opacity = vignette * (1.0 - clarity) * 1.3;
+	COLOR = mix(screen, must_color, clamp(opacity, 0.0, 1.0));
 }

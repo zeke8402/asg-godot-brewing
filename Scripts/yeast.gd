@@ -3,6 +3,7 @@ extends Node3D
 var velocity := Vector3.ZERO
 var acceleration := Vector3.ZERO
 var time_out_of_borders: float = 0.0
+var _eat_particles: Node
 
 @export var maxVelocity: float = 5.0
 @export var maxAcceleration: float = 10.0
@@ -24,7 +25,13 @@ var food_targets := []
 var foodDistances := []
 
 enum State { FLOCKING, EATING }
-var state: State = State.FLOCKING
+var state: State = State.FLOCKING:
+	set(value):
+		state = value
+		if value == State.EATING:
+			_eat_particles.emitting = true
+		else:
+			_eat_particles.emitting = false
 
 var eat_timer: float = 0.0 # How long before food units are gained.
 var current_food: Node3D = null:
@@ -39,6 +46,12 @@ var burst_timer: float = 0.0
 
 func _ready() -> void:
 	_build_mesh()
+	_build_particles()
+
+func _build_particles() -> void:
+	_eat_particles = preload("res://Scenes/eat_particles.tscn").instantiate()
+	_eat_particles.emitting = false
+	add_child(_eat_particles)
 
 func _build_mesh() -> void:
 	var body := CharacterBody3D.new()
@@ -72,6 +85,9 @@ func _process(delta: float) -> void:
 		_process_eating(delta)
 		
 func _process_eating(delta: float) -> void:
+	_eat_particles.set_scale_radius(1.0)
+	_eat_particles.emitting = true
+	
 	if burst_timer > 0.0:
 		burst_timer -= delta
 		global_position += velocity * delta
@@ -99,6 +115,7 @@ func _process_eating(delta: float) -> void:
 	if eat_timer >= timeToEat:
 		eat_timer = 0.0
 		food_consumed += current_food.eat()
+		Ethanol.add(0.1)
 		_process_lifecycle()
 		
 func _process_lifecycle() -> void:

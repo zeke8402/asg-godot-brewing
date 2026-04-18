@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://kevwciqrh7ys"]
+
+[ext_resource type="Script" uid="uid://0dorqq3qmmpp" path="res://Scripts/food_compass.gd" id="1_k3edq"]
+
+[node name="FoodCompass" type="CanvasLayer" unique_id=1669471642]
+
+[node name="Node2D" type="Node2D" parent="." unique_id=608968902]
+script = ExtResource("1_k3edq")

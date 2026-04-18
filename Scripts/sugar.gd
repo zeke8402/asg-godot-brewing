@@ -3,13 +3,9 @@ extends Node3D
 var radius: float = 1.0
 var drift: Vector3 # random direction to drift in
 var rotation_speed: Vector3
-var _feed_indicator: MeshInstance3D
 var _being_eaten: bool = false:
 	set(value):
 		_being_eaten = value
-		if _feed_indicator:
-			_feed_indicator.visible = value
-
 var _label: Label
 var _label_canvas: CanvasLayer
 var units: int = 0
@@ -38,20 +34,6 @@ func _build_mesh() -> void:
 
 	add_child(body)
 	
-func _build_feed_indicator() -> void:
-	_feed_indicator = MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = 0.9
-	torus.outer_radius = 1.0
-	_feed_indicator.mesh = torus
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.5, 0.0, 0.6)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_feed_indicator.material_override = mat
-	_feed_indicator.visible = false
-	_feed_indicator.top_level = true
-	add_child(_feed_indicator)
-	
 func _build_label() -> void:
 	_label_canvas = CanvasLayer.new()
 	_label_canvas.layer = 15
@@ -67,15 +49,6 @@ func _update_label() -> void:
 	if _label:
 		_label.text = "%d/%d" % [units, total_units]
 		_label.visible = units < total_units
-		
-func _update_feed_indicator() -> void:
-	if _feed_indicator:
-		var torus := _feed_indicator.mesh as TorusMesh
-		if torus:
-			var outer: float = max(scale.x * 1.0, 0.2)
-			var inner: float = max(scale.x * 0.9, outer - 0.1)
-			torus.outer_radius = outer
-			torus.inner_radius = inner
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -95,15 +68,12 @@ func _ready() -> void:
 	).normalized() * 0.5
 	add_to_group("food")
 	_build_mesh()
-	_build_feed_indicator()
-	_update_feed_indicator()
 	_build_label()
 	
 func _update_scale() -> void:
 	var s: float = max(float(units) / 20.0, 0.01)
 	scale = Vector3(s, s, s)
 	radius = s
-	_update_feed_indicator()
 
 func _process(delta: float) -> void:
 	if not is_instance_valid(self):
@@ -122,11 +92,6 @@ func _process(delta: float) -> void:
 			var screen_pos := camera.unproject_position(global_position)
 			_label.position = screen_pos - Vector2(_label.size.x / 2.0, _label.size.y / 2.0)
 	_update_label()
-	
-	if _feed_indicator:
-		_feed_indicator.global_position = global_position
-		_feed_indicator.global_position.y = 0.0
-		_feed_indicator.rotation = Vector3.ZERO
 	
 func eat() -> int:
 	if units <= 0:

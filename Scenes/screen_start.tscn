@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://bsxo5jrnpoe34"]
+
+[ext_resource type="Script" uid="uid://bii4kthm4710c" path="res://Scripts/screen_start.gd" id="1_n28tb"]
+
+[node name="StartScreen" type="CanvasLayer" unique_id=1574444289]
+script = ExtResource("1_n28tb")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=308780146]
+offset_right = 1151.0
+offset_bottom = 647.0
+
+[node name="Label" type="Label" parent="." unique_id=1759597687]
+offset_left = 28.0
+offset_top = 27.0
+offset_right = 1136.0
+offset_bottom = 123.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "YEASTS OF BURDEN"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StartGameButton" type="Button" parent="." unique_id=740366794]
+offset_left = 443.0
+offset_top = 274.0
+offset_right = 719.0
+offset_bottom = 327.0
+text = "Start Game"
+
+[node name="TutorialButton" type="Button" parent="." unique_id=325645808]
+offset_left = 439.0
+offset_top = 348.0
+offset_right = 715.0
+offset_bottom = 401.0
+text = "How to Play"
+
+[node name="ExitGameButton" type="Button" parent="." unique_id=211609892]
+offset_left = 439.0
+offset_top = 429.0
+offset_right = 715.0
+offset_bottom = 482.0
+text = "Exit Game"
+
+[connection signal="pressed" from="StartGameButton" to="." method="_on_start_game_button_pressed"]
+[connection signal="pressed" from="TutorialButton" to="." method="_on_tutorial_button_pressed"]
+[connection signal="pressed" from="ExitGameButton" to="." method="_on_exit_game_button_pressed"]

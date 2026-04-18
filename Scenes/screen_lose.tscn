@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://dts826usvpdb1"]
+
+[ext_resource type="Script" uid="uid://bmj0osvq0oor2" path="res://Scripts/screen_lose.gd" id="1_xkda5"]
+
+[node name="LoseScreen" type="CanvasLayer" unique_id=207257241]
+script = ExtResource("1_xkda5")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=704273811]
+offset_right = 1150.0
+offset_bottom = 650.0
+color = Color(1, 1, 1, 0.5058824)
+
+[node name="Label" type="Label" parent="." unique_id=1033830874]
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 1150.0
+offset_bottom = 225.0
+theme_override_font_sizes/font_size = 64
+text = "YOU LOST"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="." unique_id=672461895]
+offset_left = 4.0
+offset_top = 239.0
+offset_right = 1152.0
+offset_bottom = 282.0
+text = "No more Yeast Cells are alive."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Button" type="Button" parent="." unique_id=2086380406]
+offset_left = 426.0
+offset_top = 284.0
+offset_right = 725.0
+offset_bottom = 345.0
+text = "Main Menu"
+
+[connection signal="pressed" from="Button" to="." method="_on_main_menu_button_pressed"]

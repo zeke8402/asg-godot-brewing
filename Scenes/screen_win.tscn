@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://6dowxsb88n1n"]
+
+[ext_resource type="Script" uid="uid://cfgpmfuv0beys" path="res://Scripts/screen_win.gd" id="1_kbg44"]
+
+[node name="WinScreen" type="CanvasLayer" unique_id=1145295226]
+script = ExtResource("1_kbg44")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1897528704]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1.4369954, 1.4369954, 1.4369954, 0.46666667)
+
+[node name="BackToMenuButton" type="Button" parent="." unique_id=1425537312]
+offset_left = 494.0
+offset_top = 379.0
+offset_right = 698.0
+offset_bottom = 420.0
+text = "Back to Menu"
+
+[node name="ScoreLabel" type="Label" parent="." unique_id=639970116]
+offset_left = 343.0
+offset_top = 194.0
+offset_right = 820.0
+offset_bottom = 217.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Test"
+
+[node name="TimeLabel" type="Label" parent="." unique_id=826173538]
+offset_left = 343.0
+offset_top = 221.0
+offset_right = 820.0
+offset_bottom = 244.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+
+[node name="CellsLabel" type="Label" parent="." unique_id=2060356063]
+offset_left = 343.0
+offset_top = 248.0
+offset_right = 820.0
+offset_bottom = 271.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+
+[connection signal="pressed" from="BackToMenuButton" to="." method="_on_back_to_menu_button_pressed"]

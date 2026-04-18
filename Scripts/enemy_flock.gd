@@ -77,10 +77,6 @@ func _spawn_cells() -> void:
 			randf_range(-5.0, 5.0)
 		)
 		_cells.append(cell)
-		
-		if OS.is_debug_build():
-			_add_range_indicator(cell)
-			_add_food_range_indicator(cell)
 			
 func spawn_cell_at(pos: Vector3, burst_dir: Vector3 = Vector3.ZERO) -> void:
 	var cell: Node3D = preload("res://Scenes/enemy_yeast.tscn").instantiate()
@@ -97,32 +93,6 @@ func spawn_cell_at(pos: Vector3, burst_dir: Vector3 = Vector3.ZERO) -> void:
 func remove_cell(cell: Node3D) -> void:
 	print('erasing')
 	_cells.erase(cell)
-		
-func _add_range_indicator(cell: Node3D) -> void:
-	var mesh_instance := MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = visualRange - 0.1
-	torus.outer_radius = visualRange
-	mesh_instance.mesh = torus
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1, 0, 0, 0.2)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mesh_instance.material_override = mat
-	cell.add_child(mesh_instance)
-	
-func _add_food_range_indicator(cell: Node3D) -> void:
-	var mesh_instance := MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = foodRange - 0.1
-	torus.outer_radius = foodRange
-	mesh_instance.mesh = torus
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(0, 1, 0, 0.2)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mesh_instance.material_override = mat
-	cell.add_child(mesh_instance)
 
 func _process(delta: float) -> void:
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")

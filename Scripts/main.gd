@@ -11,11 +11,17 @@ var _yeast_label: Label
 var _enemy_flocks: Array[Node3D] = []
 var _enemy_label: Label
 
+var _game_over: bool = false
+
+var _must_shader_material: ShaderMaterial
+
 func _ready() -> void:
 	_build_background()
 	_build_camera()
 	_build_hud()
 	_build_water_overlay()
+	_build_must_overlay()
+	_build_compass()
 	_build_light()
 	_build_food()
 	_build_enemies()
@@ -38,10 +44,24 @@ func _build_background() -> void:
 	plane.mesh = mesh
 	
 	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://Shaders/must.gdshader")
+	mat.shader = preload("res://Shaders/background.gdshader")
 	plane.material_override = mat
 	plane.position.y = -5
 	add_child(plane)
+
+func _build_must_overlay() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.layer = 5
+	add_child(canvas)
+	
+	var rect := ColorRect.new()
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	_must_shader_material = ShaderMaterial.new()
+	_must_shader_material.shader = preload("res://Shaders/must.gdshader")
+	_must_shader_material.set_shader_parameter("clarity", 0.0)
+	rect.material = _must_shader_material
+	canvas.add_child(rect)
 	
 func _build_water_overlay() -> void:
 	var canvas := CanvasLayer.new()
@@ -89,7 +109,7 @@ func _build_light() -> void:
 func _build_food() -> void:
 	_spawn_food_at(Vector3(20, 0, 0))
 	
-	for i in range(50):
+	for i in range(49):
 		var pos := Vector3(
 			randf_range(-100.0, 100.0),
 			0.0,
@@ -135,12 +155,16 @@ func _build_hud() -> void:
 	_enemy_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_enemy_label.position = Vector2(0, 30)
 	canvas.add_child(_enemy_label)
+	
+func _build_compass() -> void:
+	var compass := preload("res://Scenes/food_compass.tscn").instantiate()
+	add_child(compass)
+	compass.get_child(0).setup(_flock, self)
 
 func _process(_delta: float) -> void:
 	_time_label.text = "%.2f" % (Time.get_ticks_msec() / 1000.0)
 	_yeast_label.text = "Yeast: %d" % _flock._cells.size()
 		
-	var total_enemy_cells: int = 0
 	# Reactivate to quickly test win screen
 	'''
 	if _enemy_flocks.size() <= 0:
@@ -149,12 +173,23 @@ func _process(_delta: float) -> void:
 		win_screen.call_deferred("setup", 0,0,0)
 	'''
 
+	if _must_shader_material:
+		_must_shader_material.set_shader_parameter("clarity", Ethanol.get_clarity())
 		
-	for flock in _enemy_flocks:
-		total_enemy_cells += flock._cells.size()
-		_enemy_label.text = "Enemy cells: %d" % total_enemy_cells
+	var sugar_count := 0
+	for node in get_children():
+		if node.is_in_group("food"):
+			sugar_count += 1
+	
+	if not _game_over and sugar_count == 0:
+		_game_over = true
+		_show_win_screen()
 		
-	if total_enemy_cells == 0 and _enemy_flocks.size() > 0:
+	if _flock._cells.size() == 0:
+		_game_over = true
+		_show_lose_screen()
+		
+	if sugar_count == 0:
 		_show_win_screen()
 		
 	if _flock:
@@ -170,6 +205,14 @@ func _show_win_screen() -> void:
 	var elapsed: float = Time.get_ticks_msec() / 1000.0
 	var score: int = _flock._cells.size() * 1000 - int(elapsed)
 	
-	var win_screen := preload("res://Scenes/win_screen.tscn").instantiate()
+	var win_screen := preload("res://Scenes/screen_win.tscn").instantiate()
 	add_child(win_screen)
 	win_screen.setup(score, elapsed, _flock._cells.size())
+
+func _show_lose_screen() -> void:
+	var elapsed: float = Time.get_ticks_msec() / 1000.0
+	
+	var lose_screen := preload("res://Scenes/screen_lose.tscn").instantiate()
+	add_child(lose_screen)
+	lose_screen.setup(elapsed)
+	
