@@ -2,6 +2,7 @@ extends Node
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	Music.play(preload("res://Assets/output.ogg"))
 
 func _on_start_game_button_pressed() -> void:
 	get_tree().paused = false

@@ -30,8 +30,10 @@ var state: State = State.FLOCKING:
 		state = value
 		if value == State.EATING:
 			_eat_particles.emitting = true
+			_eat_sound.play()
 		else:
 			_eat_particles.emitting = false
+			_eat_sound.stop()
 
 var eat_timer: float = 0.0 # How long before food units are gained.
 var current_food: Node3D = null:
@@ -47,6 +49,21 @@ var burst_timer: float = 0.0
 func _ready() -> void:
 	_build_mesh()
 	_build_particles()
+	_build_sounds()
+	
+var _eat_sound: AudioStreamPlayer
+var _replicate_sound: AudioStreamPlayer
+
+func _build_sounds() -> void:
+	_eat_sound = AudioStreamPlayer.new()
+	_eat_sound.stream = preload("res://Assets/eating.ogg")
+	_eat_sound.bus = "SFX"
+	add_child(_eat_sound)
+	
+	_replicate_sound = AudioStreamPlayer.new()
+	_replicate_sound.stream = preload("res://Assets/replicating.ogg")
+	_replicate_sound.bus = "SFX"
+	add_child(_replicate_sound)
 
 func _build_particles() -> void:
 	_eat_particles = preload("res://Scenes/eat_particles.tscn").instantiate()
@@ -135,6 +152,7 @@ func _replicate() -> void:
 			current_dir = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0)).normalized()
 		velocity = -current_dir * flock.replicateBurstStrength
 		flock.spawn_cell_at(global_position, current_dir)
+		_replicate_sound.play()
 
 func _die() -> void:
 	velocity = Vector3.ZERO

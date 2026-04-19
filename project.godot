@@ -11,17 +11,23 @@ config_version=5
 [application]
 
 config/name="asg-godot-brewing"
-run/main_scene="uid://bq2nva3dhtyeo"
+run/main_scene="uid://bsxo5jrnpoe34"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[audio]
+
+buses/default_bus_layout="uid://di2cdgnqsx5cr"
 
 [autoload]
 
 Ethanol="*uid://d4e1ui5vgny06"
+Music="*uid://bp6k6nq7jexxn"
 
 [file_customization]
 
 folder_colors={
+"res://Assets/": "pink",
 "res://Autoload/": "orange",
 "res://Scenes/": "blue",
 "res://Scripts/": "green",

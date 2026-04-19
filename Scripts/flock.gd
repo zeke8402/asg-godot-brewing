@@ -101,7 +101,6 @@ func spawn_cell_at(pos: Vector3, burst_dir: Vector3 = Vector3.ZERO) -> void:
 		#_add_food_range_indicator(cell)
 
 func remove_cell(cell: Node3D) -> void:
-	print('erasing')
 	_cells.erase(cell)
 		
 func _process(delta: float) -> void:
